@@ -88,11 +88,22 @@ const owners = [address1, address2, address3];
 const threshold = 3;
 const safeAccountConfig = { owners: owners, threshold: threshold };
 
-  const safe = await safeFactory.deploySafe({ safeAccountConfig });
+const safe = await safeFactory.deploySafe({ safeAccountConfig });
 ```
 
 Yukarıdaki parametreler ile safeFactory objesine `deploySafe` metodu çağırılır. Bu metod chain üzerinde çalıştığı için await kullanılmalıdır.
 owners: Safe yetklili hesapların adresleri.
 threshold: Bir MultiSig transcation gönderilebilmesi için gerekli olan minimun onay sayısı.
 
-Bu iki parametre `safeAccountConfig` objesinde görüldüğü gibi tanımlanır ve `deploySafe` metodu için input verilir.
+Bu iki parametre `safeAccountConfig` objesinde görüldüğü gibi tanımlanır ve `deploySafe` metodu için input verilir. Metod Retrun promise olarak bir `Safe` object verir.
+
+### 3.2 Ağda bulunan Proxy Kontratı kullanmak
+
+```js
+const safe = await Safe.create({
+    ethAdapter: ethAdapter,
+    safeAddress: safeAddress,
+    contractNetworks: contractNetworks,
+  });
+```
+Bu durumda `Safe`class'ında `create` metodu kullanılır ve parametre olarak fazladan input objesine `safeAddress` eklenir. Bu ağdaki Proxy kontratın adresidir.
