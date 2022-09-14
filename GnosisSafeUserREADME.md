@@ -48,7 +48,7 @@ Safe objesi, ağda bulunan Proxy kontratın interface'idir. Bu interface Safe il
 const Safe = require("@gnosis.pm/safe-core-sdk").default;
 ```
 
-Safe class'ını require aldıktan sonra bir Safe objesi oluşturmak için senaryo vardır.
+Safe class'ını require aldıktan sonra bir Safe objesi oluşturmak için iki senaryo vardır.
 
 ### 3.1 Ağa bir Proxy Kontrat deploy etmek
 
@@ -107,3 +107,81 @@ const safe = await Safe.create({
   });
 ```
 Bu durumda `Safe`class'ında `create` metodu kullanılır ve parametre olarak fazladan input objesine `safeAddress` eklenir. Bu ağdaki Proxy kontratın adresidir.
+
+## 4 - Transaction Objesi oluşturmak
+
+Onaylanmak ve gönderilmek üzere bir transaction objesi şu şekilde oluşturulur:
+
+```js
+const transaction = {
+    to: "0x43A8f63c4616376d7f8775E603e8a17CE4D19957",
+    value: 10000000000000,
+    data: "0x",
+    operation: 0,
+    safeTxGas: 0,
+    baseGas: 0,
+    gasPrice: 0,
+    gasToken: "0x0000000000000000000000000000000000000000",
+    refundReceiver: "0x0000000000000000000000000000000000000000",
+    nonce: currentNonce,
+  };
+```
+
+Nonce: Nonce değeri her Proxy kontrat için ayrıdır ve her başarılı transaction sonrası artar. Bu nonce:
+
+```js
+const currentNonce = await safe.getNonce();
+```
+
+metoduyla elde edilebilir.
+
+Sonraki adım bu objeyi kullanarak bir safeTransaction objesi oluşturmaktır. Bunun için
+
+```js
+const safeTransaction = await safe.createTransaction(transaction);
+```
+
+safe objesinde `createTransaction` metodu çağırılır. Bu Promise olarak `EthSafeTransaction` clasında bir obje döndürür.
+
+`EthSafeTransaction` objesi içinde hem transaction bilgilerini hem de bu transaction'ı imzalamış kişilerin imzaları ve adreslerini içerir.
+
+## 5 – Transaction imzalamak (Signing)
+
+Gnosis ile bir transcation onaylamanın birkaç yolu vardır. Bu yöntemlerden ikisi:
+
+	- safeTransaction objesine bir owner’ın kendi ethAdapter’ı ile oluşturduğu safe instance objesi ile hem imzalaması hem de bu imzaları safeTransaction objesine eklemesi.
+  
+	- safeTransaction objesini imzalayıp signature’ı ayrı olarak elde etmek. Bu yöntem Safe Service kullanmak için şimdilik gereklidir.
+  
+### 5.1 – SafeTransaction objesini imzalamak
+
+```js
+await safe.signTransaction(safeTransaction, "eth_signTypedData");
+```
+
+Bu metod ile bir safeTransaction objesi safe instance ile imzalanır ve objeye eklenir. Bu işlem birden fazla owner safe instance ile yapılır ise her bir owner signature bu objeye eklenir.
+
+### 5.2 – SignTypedData ile signature objesini ayrı elde etmek
+
+```js
+const senderSignature = await safe.signTypedData(safeTransaction);
+```
+
+Bu metod ile senderSignature ayrı olarak elde edilebilir. Daha sonrasında bu signature:
+
+```js
+safeTransaction.addSignature(
+        new EthSignSignature(
+          senderAddress,
+          senderSignature
+        )
+      );
+```
+
+şeklinde safeTransaction’a eklenebilir fakat bu yöntem için EthSignSignature class’ının projeye eklenmesi gerekmektedir.
+
+```js
+const { EthSignSignature } = require("@gnosis.pm/safe-core-sdk");
+```
+
+5.2 yöntemi 
