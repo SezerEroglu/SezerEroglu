@@ -20,10 +20,7 @@ Bir Ethers.js objesini wrapleyen Gnosis objesi. Safe üzerinden tx göndermek ve
 
 ```js
 const { ethers } = require("ethers");
-const provider = new ethers.providers.InfuraProvider(
-  "rinkeby",
-  "91ce96ee878d4ee6a72592e802293f58"
-);
+const provider = new ethers.providers(//PROVIDER INFURA RPC etc.);
 
 
 const wallet1 = new ethers.Wallet(process.env.ACCOUNT_1_PK /*Private Key*/, provider);
