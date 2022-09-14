@@ -13,6 +13,7 @@ Manuel eklemek için tüm dependencyler
 ```ps
 yarn add ethers
 yarn add @gnosis.pm/safe-core-sdk
+yarn add @gnosis.pm/safe-ethers-lib
 
 ```
 ## 1 – EthAdapter
@@ -184,4 +185,30 @@ safeTransaction.addSignature(
 const { EthSignSignature } = require("@gnosis.pm/safe-core-sdk");
 ```
 
-5.2 yöntemi 
+5.2 yöntemi ile EthSafeTransaction objesine manuel signature ekleme işlemleri Safe Transaction servisi ile gerçekleştirilebilir.
+
+## 6 – İmzalı Transaction Göndermek
+
+GnosisSafe kontratı ile standart EVM yöntemleriyle gerçekleştirilebilir fakat bir Proxy kontrat aracılığıyla yapılır. Etherscan gibi platformlarda contract validation işlemi ile bir Safe instance kontratın proxy’si olduğu kontratlar valide edilmiş ise (validation işlemi hardhat deploy scriptleri üzerinde gerçekleşebilmektedir) Etherscan üzerinden execTransaction fonksiyonu üzerindeki alanlar doldurularak ve son variable olarak ownerların imzaları kaskat girilerek gerçekleştirilebilir. Bu yöntem ile tx göndermek için fonksiyon inputlarındaki tx propertyleri, safeTxHash denilen bu propertyler ile uyuşan bir hash ve bu tx’i imzalayan ownerların imzalarının cascade edilmesi gerekir. 
+
+Fakat bu uzun işlem yerine Gnosis kütüphanesinden Safe instance metodları ile gerçekleştirilebilir.
+
+### 6.1 – Safe Instance ile Tx göndermek
+
+```js
+//Opsyonel 
+const options = {
+    gasLimit: 100000,
+  };
+
+const executeTxResponse = await safe.executeTransaction(
+    safeTransaction,
+    options
+  );
+```
+
+Görüldüğü şekilde bir transaction gönderilebilir. 
+
+`Options` objesi gasLimit, gasPrice gibi opsiyonlar eklemek için kullanılır.
+
+ExecuteTransaction metodu Safe instance metodudur. Opsiyonel bir options objesi ile imzaları eklenmiş bir safeTransaction objesi gerekir. İmzalar doğru ve yeterli sayıda ise (Threshold’a eşit veya daha fazla ise) tx gerçekleştirilir. Bu işlem Proxy kontrata gönderilir ve Proxy, MasterCopy’e delegateCall gönderir. Potansiyel hatalar GS*** kodlarıyla Etherscan gibi platformlarda görülebilir.
